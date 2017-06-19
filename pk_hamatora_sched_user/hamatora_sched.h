@@ -14,6 +14,7 @@
  * Project Includes
  *=====================================================================================*/
 #include "worker.h"
+#include "hama_hsm.h"
 /*=====================================================================================* 
  * Standard Includes
  *=====================================================================================*/
@@ -34,7 +35,7 @@
 #define CLASS_INHERITS Worker
 
 #define CLASS_MEMBERS(_member) \
-_member(IPC_Task_Id_T _private, tid) \
+_member(Hama_HSM_T _private, hsm) \
 
 #define CLASS_METHODS(_method, _void_method) \
 void _method(ctor, uint32_t const, IPC_Process_Id_T const) \
@@ -59,7 +60,7 @@ CLASS_DECLARATION
  *=====================================================================================*/
 extern void Hama_Sched_run_all_apps(void);
 extern void Hama_Sched_initialized(void);
-extern void Hama_Sched_shut_down(void);
+extern void Hama_Sched_terminated(void);
 extern void Hama_Sched_shutdown(void);
 /*=====================================================================================* 
  * Exported Function Like Macros
