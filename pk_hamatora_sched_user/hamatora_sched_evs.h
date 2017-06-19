@@ -20,7 +20,12 @@
 /*=====================================================================================* 
  * Exported X-Macros
  *=====================================================================================*/
+#define HAMA_SCHED_PRIVATE_MAIL_LIST \
+   PRIVATE_MAIL(HAMA_SCHED_TASK_INIT,     "MAILS TO SCHEDULER THAT TASK IS INITIATED") \
+   PRIVATE_MAIL(HAMA_SCHED_TASK_TERM,     "MAILS TO SCHEDULER THAT TASK IS TERMINATED") \
+   PRIVATE_MAIL(HAMA_SCHED_SHUTDOWN,      "MAILS TO SCHEDULER TO SHUTDOWN ALL APPS") \
 
+#define HAMA_SCHED_SUBSCRIBABLE_MAIL_LIST \
 /*=====================================================================================* 
  * Exported Define Macros
  *=====================================================================================*/

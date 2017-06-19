@@ -13,7 +13,7 @@
 /*=====================================================================================*
  * Project Includes
  *=====================================================================================*/
-
+#include "worker.h"
 /*=====================================================================================* 
  * Standard Includes
  *=====================================================================================*/
@@ -25,11 +25,31 @@
 /*=====================================================================================* 
  * Exported Define Macros
  *=====================================================================================*/
-namespace hama{
+#undef CLASS_NAME
+#undef CLASS_INHERITS
+#undef CLASS_MEMBERS
+#undef CLASS_METHODS
+
+#define CLASS_NAME Hama_Sched
+#define CLASS_INHERITS Worker
+
+#define CLASS_MEMBERS(_member) \
+_member(IPC_Task_Id_T _private, tid) \
+
+#define CLASS_METHODS(_method, _void_method) \
+void _method(ctor, uint32_t const, IPC_Process_Id_T const) \
+void _void_method(run) \
+void _void_method(lock) \
+void _void_method(unlock) \
+void _void_method(shut) \
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*=====================================================================================* 
  * Exported Type Declarations
  *=====================================================================================*/
-
+CLASS_DECLARATION
 /*=====================================================================================* 
  * Exported Object Declarations
  *=====================================================================================*/
@@ -37,12 +57,16 @@ namespace hama{
 /*=====================================================================================* 
  * Exported Function Prototypes
  *=====================================================================================*/
-extern void Run_All_Apps(void);
-extern void Shut(void);
+extern void Hama_Sched_run_all_apps(void);
+extern void Hama_Sched_initialized(void);
+extern void Hama_Sched_shut_down(void);
+extern void Hama_Sched_shutdown(void);
 /*=====================================================================================* 
  * Exported Function Like Macros
  *=====================================================================================*/
-}/*namespace hama*/
+#ifdef __cplusplus
+}
+#endif
 /*=====================================================================================* 
  * arduino_fwk.h
  *=====================================================================================*

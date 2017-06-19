@@ -8,14 +8,14 @@
  *
  */
 /*=====================================================================================*/
-
+#define CLASS_IMPLEMENTATION
 /*=====================================================================================*
  * Project Includes
  *=====================================================================================*/
-#include "hamatora_sched.h"
 #include "hamatora_sched_def.h"
 #include "hamatora_sched_ext.h"
 #include "hama_dbg_trace.h"
+#include "hamatora_sched.h"
 /*=====================================================================================* 
  * Standard Includes
  *=====================================================================================*/
@@ -35,6 +35,7 @@
 /*=====================================================================================* 
  * Local Object Definitions
  *=====================================================================================*/
+CLASS_DEFINITION
 static bool Stop_Hama_Sched = true;
 
 #if HOST
@@ -52,6 +53,8 @@ const Pgm_Char_T * const Sched_Apps_Names[] PROGMEM =
 };
 
 #endif
+
+
 /*=====================================================================================* 
  * Exported Object Definitions
  *=====================================================================================*/
@@ -59,9 +62,15 @@ const Pgm_Char_T * const Sched_Apps_Names[] PROGMEM =
 /*=====================================================================================* 
  * Local Function Prototypes
  *=====================================================================================*/
-static void hamatora_sched_main(void);
-static void hamatora_sched_start(void);
-static void hamatora_sched_stop(void);
+static void Hama_Sched_get_instance(Hama_Sched_T ** instance);
+static void Hama_Sched_Ctor(Hama_Sched_T * const this, IPC_Process_Id_T const pid);
+static void Hama_Sched_run(Hama_Sched_T * const this);
+static void Hama_Sched_unlock(Hama_Sched_T * const this);
+static void Hama_Sched_lock(Hama_Sched_T * const this);
+static void Hama_Sched_shut(Hama_Sched_T * const this);
+static void Hama_Sched_on_loop(Worker_T * const super);
+static void Hama_Sched_on_start(Worker_T * const super);
+static void Hama_Sched_on_stop(Worker_T * const super);
 /*=====================================================================================* 
  * Local Inline-Function Like Macros
  *=====================================================================================*/
@@ -69,7 +78,26 @@ static void hamatora_sched_stop(void);
 /*=====================================================================================* 
  * Local Function Definitions
  *=====================================================================================*/
-void hamatora_sched_main(void)
+void Hama_Sched_init(void)
+{
+   printf("%s \n", __FUNCTION__);
+   Hama_Sched_Obj.Worker = Worker();
+
+   Hama_Sched_Vtbl.Worker.Task.Object.rtti = &Hama_Sched_Rtti;
+   Hama_Sched_Vtbl.Worker.Task.Object.destroy = Hama_Sched_Dtor;
+   Hama_Sched_Vtbl.ctor = Hama_Sched_Ctor;
+   Hama_Sched_Vtbl.run = NULL;
+
+}
+void Hama_Sched_shut(void) {}
+
+void Hama_Sched_Dtor(Object_T * const obj)
+{
+   Hama_Sched_T * const this = _dynamic_cast(Hama_Sched, obj);
+   Isnt_Nullptr(this, );
+   bool_t is_unregistered = Hama_Sched_unregister_process(this);
+}
+void Hama_Sched_on_loop(Worker_T * const super)
 {
    while (Stop_Hama_Sched)
    {
@@ -92,7 +120,7 @@ void hamatora_sched_main(void)
    }
 }
 
-static void hamatora_sched_start(void)
+static void Hama_Sched_on_start(void)
 {
    for(uint8_t app_id = 0; app_id < pgm_read_byte(Num_Of_Scheduled_Apps); app_id++)
    {
@@ -112,7 +140,7 @@ static void hamatora_sched_start(void)
    }
 }
 
-static void hamatora_sched_stop(void)
+static void Hama_Sched_on_stop(void)
 {
    for(uint8_t app_id = 0; app_id < pgm_read_byte(Num_Of_Scheduled_Apps); app_id++)
    {
@@ -134,17 +162,43 @@ static void hamatora_sched_stop(void)
 /*=====================================================================================* 
  * Exported Function Definitions
  *=====================================================================================*/
-void hama::Run_All_Apps(void)
+void Hama_Sched_Ctor(Hama_Sched_T * const this, IPC_Process_Id_T const pid)
 {
-   Stop_Hama_Sched = true;
-   hamatora_sched_start();
-   hamatora_sched_main();
-   hamatora_sched_stop();
+   this->vtbl->Worker.ctor(&this->Worker, 0, pid);
+}
+void Hama_Sched_run(Hama_Sched_T * const this)
+{
+
+}
+void Hama_Sched_unlock(Hama_Sched_T * const this)
+{
+
 }
 
-void hama::Shut(void)
+void Hama_Sched_lock(Hama_Sched_T * const this)
 {
-   Stop_Hama_Sched = false;
+
+}
+
+void Hama_Sched_shut(Hama_Sched_T * const this)
+{
+
+}
+
+void Hama_Sched_run_all_apps(void)
+{
+   Hama_Sched_T * sched = NULL;
+   Hama_Sched_get_instance(&sched);
+   Isnt_Nullptr(sched,)
+   sched->vtbl->run(sched);
+}
+
+void Hama_Sched_shut(void)
+{
+   Hama_Sched_T * sched = NULL;
+   Hama_Sched_get_instance(&sched);
+   Isnt_Nullptr(sched,)
+   sched->vtbl->shut(sched);
 }
 /*=====================================================================================* 
  * arduino_fwk.cpp
