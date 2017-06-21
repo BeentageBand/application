@@ -13,8 +13,8 @@
 /*=====================================================================================*
  * Project Includes
  *=====================================================================================*/
-#include "worker.h"
 #include "hama_hsm.h"
+#include "worker.h"
 /*=====================================================================================* 
  * Standard Includes
  *=====================================================================================*/
@@ -38,11 +38,7 @@
 _member(Hama_HSM_T _private, hsm) \
 
 #define CLASS_METHODS(_method, _void_method) \
-void _method(ctor, uint32_t const, IPC_Process_Id_T const) \
-void _void_method(run) \
-void _void_method(lock) \
-void _void_method(unlock) \
-void _void_method(shut) \
+void _method(ctor, IPC_Process_Id_T const) \
 
 #ifdef __cplusplus
 extern "C" {
