@@ -1,6 +1,6 @@
 /*=====================================================================================*/
 /**
- * arduino_fwk.cpp
+ * app.c
  * author : puch
  * date : Oct 22 2015
  *
@@ -12,10 +12,10 @@
 /*=====================================================================================*
  * Project Includes
  *=====================================================================================*/
-#include "hama_dbg_trace.h"
+#include "dbg_log.h"
 #include "ipc.h"
-#include "hamatora_sched.h"
-#include "hamatora_sched_ext.h"
+#include "app.h"
+#include "app_ext.h"
 /*=====================================================================================* 
  * Standard Includes
  *=====================================================================================*/
@@ -31,17 +31,17 @@
 /*=====================================================================================* 
  * Local Type Definitions
  *=====================================================================================*/
-struct Hama_Sched_Handler_T
+struct App_Handler_T
 {
    IPC_Mail_Id_T mail_id;
-   void (* process)(Hama_Sched_T * const, void const * const data, size_t const data_size);
+   void (* process)(App_T * const, void const * const data, size_t const data_size);
 };
 /*=====================================================================================* 
  * Local Object Definitions
  *=====================================================================================*/
 CLASS_DEFINITION
-static Hama_Sched_T * Single_Hama_Sched = NULL;
-static struct Hama_Sched_Handler_T Hama_Sched_Handler[] =
+static App_T * Single_App = NULL;
+static struct App_Handler_T App_Handler[] =
 {
 
 };
@@ -52,11 +52,11 @@ static struct Hama_Sched_Handler_T Hama_Sched_Handler[] =
 /*=====================================================================================* 
  * Local Function Prototypes
  *=====================================================================================*/
-static int Hama_Sched_Handler_Compare(void const * a, void const * b);
-static void Hama_Sched_Ctor(Hama_Sched_T * const this, IPC_Process_Id_T const pid);
-void Hama_Sched_on_loop(Worker_T * const super);
-void Hama_Sched_on_start(Worker_T * const super);
-void Hama_Sched_on_stop(Worker_T * const super);
+static int App_Handler_Compare(void const * a, void const * b);
+static void App_Ctor(App_T * const this, IPC_Process_Id_T const pid);
+void App_on_loop(Worker_T * const super);
+void App_on_start(Worker_T * const super);
+void App_on_stop(Worker_T * const super);
 /*=====================================================================================* 
  * Local Inline-Function Like Macros
  *=====================================================================================*/
@@ -64,52 +64,52 @@ void Hama_Sched_on_stop(Worker_T * const super);
 /*=====================================================================================* 
  * Local Function Definitions
  *=====================================================================================*/
-void Hama_Sched_init(void)
+void App_init(void)
 {
    printf("%s \n", __FUNCTION__);
-   Hama_Sched_Obj.Worker = Worker();
+   App_Obj.Worker = Worker();
 
-   Hama_Sched_Vtbl.Worker.Task.Object.rtti = &Hama_Sched_Rtti;
-   Hama_Sched_Vtbl.Worker.Task.Object.destroy = Hama_Sched_Dtor;
-   Hama_Sched_Vtbl.Worker.on_start = Hama_Sched_on_start;
-   Hama_Sched_Vtbl.Worker.on_loop = Hama_Sched_on_loop;
-   Hama_Sched_Vtbl.Worker.on_stop = Hama_Sched_on_stop;
-   Hama_Sched_Vtbl.ctor = Hama_Sched_Ctor;
+   App_Vtbl.Worker.Task.Object.rtti = &App_Rtti;
+   App_Vtbl.Worker.Task.Object.destroy = App_Dtor;
+   App_Vtbl.Worker.on_start = App_on_start;
+   App_Vtbl.Worker.on_loop = App_on_loop;
+   App_Vtbl.Worker.on_stop = App_on_stop;
+   App_Vtbl.ctor = App_Ctor;
 
 }
 
-void Hama_Sched_shut(void) {}
+void App_shut(void) {}
 
-void Hama_Sched_Dtor(Object_T * const obj)
+void App_Dtor(Object_T * const obj)
 {
-   Hama_Sched_T * const this = _dynamic_cast(Hama_Sched, obj);
+   App_T * const this = _dynamic_cast(App, obj);
    Isnt_Nullptr(this, );
 }
 
-void Hama_Sched_on_loop(Worker_T * const super)
+void App_on_loop(Worker_T * const super)
 {
-   Hama_Sched_T * const this = _dynamic_cast(Hama_Sched, super);
+   App_T * const this = _dynamic_cast(App, super);
    Isnt_Nullptr(this, );
    Mail_T * const mail = IPC_retreive_mail(IPC_RETRIEVE_TOUT_MS);
    Isnt_Nullptr(mail, );
-   struct Hama_Sched_Handler_T * handle = bsearch(&mail->mail_id, Hama_Sched_Handler,
-         Num_Elems(Hama_Sched_Handler), sizeof(*Hama_Sched_Handler),
-         Hama_Sched_Handler_Compare);
+   struct App_Handler_T * handle = bsearch(&mail->mail_id, App_Handler,
+         Num_Elems(App_Handler), sizeof(*App_Handler),
+         App_Handler_Compare);
 
    Isnt_Nullptr(handle, );
    handle->process(this, mail->data, mail->data_size);
 }
 
-void Hama_Sched_on_start(Worker_T * const super)
+void App_on_start(Worker_T * const super)
 {
-   Hama_Sched_T * const this = _dynamic_cast(Hama_Sched, super);
+   App_T * const this = _dynamic_cast(App, super);
    Isnt_Nullptr(this, );
    this->hsm.vtbl->ctor(&this->hsm, 0, NULL, 0, NULL, 0); /* FIXME initialize */
 }
 
-void Hama_Sched_on_stop(Worker_T * const super)
+void App_on_stop(Worker_T * const super)
 {
-   Hama_Sched_T * const this = _dynamic_cast(Hama_Sched, super);
+   App_T * const this = _dynamic_cast(App, super);
    Isnt_Nullptr(this, );
    Hama_HSM_Event_T ev =
    {
@@ -118,7 +118,7 @@ void Hama_Sched_on_stop(Worker_T * const super)
    this->hsm.vtbl->dispatch(&this->hsm, &ev);
 }
 
-int Hama_Sched_Handler_Compare(void const * a, void const * b)
+int App_Handler_Compare(void const * a, void const * b)
 {
    IPC_Mail_Id_T const * ida = (IPC_Mail_Id_T const *)a;
    IPC_Mail_Id_T const * idb = (IPC_Mail_Id_T const *)b;
@@ -127,38 +127,38 @@ int Hama_Sched_Handler_Compare(void const * a, void const * b)
 /*=====================================================================================* 
  * Exported Function Definitions
  *=====================================================================================*/
-void Hama_Sched_Ctor(Hama_Sched_T * const this, IPC_Process_Id_T const pid)
+void App_Ctor(App_T * const this, IPC_Process_Id_T const pid)
 {
    this->vtbl->Worker.ctor(&this->Worker, HAMA_SCHED_WORKER, pid);
 }
 
-void Hama_Sched_run_all_apps(void)
+void App_run_all_apps(void)
 {
-   Hama_Sched_T * this = NULL;
-   Hama_Sched_get_instance(&this);
+   App_T * this = NULL;
+   App_get_instance(&this);
    Isnt_Nullptr(this,);
    this->Worker.Task.vtbl->run(&this->Worker.Task);
 
 }
 
-void Hama_Sched_initialized(void)
+void App_initialized(void)
 {
    IPC_send(HAMA_SCHED_WORKER, HAMA_SCHED_PROCESS, HAMA_SCHED_TASK_INIT, NULL, 0);
 
 }
 
-void Hama_Sched_terminated(void)
+void App_terminated(void)
 {
    IPC_send(HAMA_SCHED_WORKER, HAMA_SCHED_PROCESS, HAMA_SCHED_TASK_TERM, NULL, 0);
 
 }
 
-void Hama_Sched_shutdown(void)
+void App_shutdown(void)
 {
    IPC_send(HAMA_SCHED_WORKER, HAMA_SCHED_PROCESS, WORKER_SHUTDOWN, NULL, 0);
 }
 /*=====================================================================================* 
- * arduino_fwk.cpp
+ * app.c
  *=====================================================================================*
  * Log History
  *
