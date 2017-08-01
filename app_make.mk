@@ -16,7 +16,7 @@ define $(_flavor_)_$(_feat_)_MAKE
 #     or
 #     $(_flavor_)_$(_feat_)_src_dir=_src
 #=======================================================================================#
-$(_flavor_)_$(_feat_)_inc=app.h app_uext.h app_evs.h
+$(_flavor_)_$(_feat_)_inc=app.h app_ext.h app_evs.h
 
 #=======================================================================================#
 # LIB REQUISITES
