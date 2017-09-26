@@ -1,2 +1,3 @@
-# pk_hamatora_sched
-Project Kit for Hamatora Scheduler
+# Application
+## Brief
+Application scheme to handle several thread/tasks.
