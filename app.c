@@ -8,158 +8,145 @@
  *
  */
 /*=====================================================================================*/
-#define CLASS_IMPLEMENTATION
-/*=====================================================================================*
- * Project Includes
- *=====================================================================================*/
+
+#define Dbg_FID DBG_FID_DEF(APP_FID, 0)
+#define COBJECT_IMPLEMENTATION
 #include "dbg_log.h"
 #include "ipc.h"
 #include "app.h"
 #include "app_ext.h"
-/*=====================================================================================* 
- * Standard Includes
- *=====================================================================================*/
 
-/*=====================================================================================* 
- * Local X-Macros
- *=====================================================================================*/
+/*==============================================================================
+ * Local Prototypes
+ * ============================================================================*/
+static void application_delete(struct Object * const obj);
+static void application_on_mail(union Worker * const super, union Mail * const mail);
+static void application_on_start(union Worker * const super);
+static void application_on_loop(union Worker * const super);
+static void application_on_stop(union Worker * const super);
+static void application_startup(union Application * const this);
 
-/*=====================================================================================* 
- * Local Define Macros
- *=====================================================================================*/
+/*==============================================================================
+ * Local Objects 
+ * ============================================================================*/
+Application_Class_T Application_Class =
+{{
+      {
+            {application_delete, NULL},
+            application_on_mail,
+            application_start, 
+            application_loop,  
+            application_stop
+      },
+      application_startup
+}};
 
-/*=====================================================================================* 
- * Local Type Definitions
- *=====================================================================================*/
-struct App_Handler_T
+static union Application Application = {{NULL}};
+static union Mailbox Application_Mailbox = {{NULL}};
+static union Mail Application_Mail_Buff[64] ={0};
+static union FSM Application_Pool[IPC_MAX_TID] = {0};
+
+/*==============================================================================
+ * Local Functions
+ * ============================================================================*/
+void application_delete(struct Object * const obj)
 {
-   IPC_Mail_Id_T mail_id;
-   void (* process)(App_T * const, void const * const data, size_t const data_size);
-};
-/*=====================================================================================* 
- * Local Object Definitions
- *=====================================================================================*/
-CLASS_DEFINITION
-static App_T * Single_App = NULL;
-static struct App_Handler_T App_Handler[] =
-{
-
-};
-/*=====================================================================================* 
- * Exported Object Definitions
- *=====================================================================================*/
-
-/*=====================================================================================* 
- * Local Function Prototypes
- *=====================================================================================*/
-static int App_Handler_Compare(void const * a, void const * b);
-static void App_Ctor(App_T * const this, IPC_Process_Id_T const pid);
-void App_on_loop(Worker_T * const super);
-void App_on_start(Worker_T * const super);
-void App_on_stop(Worker_T * const super);
-/*=====================================================================================* 
- * Local Inline-Function Like Macros
- *=====================================================================================*/
-
-/*=====================================================================================* 
- * Local Function Definitions
- *=====================================================================================*/
-void App_init(void)
-{
-   printf("%s \n", __FUNCTION__);
-   App_Obj.Worker = Worker();
-
-   App_Vtbl.Worker.Task.Object.rtti = &App_Rtti;
-   App_Vtbl.Worker.Task.Object.destroy = App_Dtor;
-   App_Vtbl.Worker.on_start = App_on_start;
-   App_Vtbl.Worker.on_loop = App_on_loop;
-   App_Vtbl.Worker.on_stop = App_on_stop;
-   App_Vtbl.ctor = App_Ctor;
-
-}
-
-void App_shut(void) {}
-
-void App_Dtor(Object_T * const obj)
-{
-   App_T * const this = _dynamic_cast(App, obj);
+   Application_T * const this = _cast(Application, obj);
    Isnt_Nullptr(this, );
 }
 
-void App_on_loop(Worker_T * const super)
+void application_on_mail(union Worker * const super, union Mail * const mail)
 {
-   App_T * const this = _dynamic_cast(App, super);
-   Isnt_Nullptr(this, );
-   Mail_T * const mail = IPC_retreive_mail(IPC_RETRIEVE_TOUT_MS);
-   Isnt_Nullptr(mail, );
-   struct App_Handler_T * handle = bsearch(&mail->mail_id, App_Handler,
-         Num_Elems(App_Handler), sizeof(*App_Handler),
-         App_Handler_Compare);
 
-   Isnt_Nullptr(handle, );
-   handle->process(this, mail->data, mail->data_size);
 }
 
-void App_on_start(Worker_T * const super)
+void application_on_start(union Worker * const super)
 {
-   App_T * const this = _dynamic_cast(App, super);
+   Application_T * const this = _cast(Application, super);
    Isnt_Nullptr(this, );
-   this->hsm.vtbl->ctor(&this->hsm, 0, NULL, 0, NULL, 0); /* FIXME initialize */
 }
 
-void App_on_stop(Worker_T * const super)
+void application_on_loop(union Worker * const super)
 {
-   App_T * const this = _dynamic_cast(App, super);
+   Application_T * const this = _dynamic_cast(Application, super);
+   Isnt_Nullptr(this, );
+   Mail_T const mail = {{NULL}};
+   if (IPC_retreive_mail(&mail, IPC_RETRIEVE_TOUT_MS))
+   {
+      if(mail.tid > APP_START_THREADS_INT_MID)
+      {
+            /* */
+      }
+
+   }
+}
+
+void application_on_stop(union Worker * const super)
+{
+   Application_T * const this = _dynamic_cast(Application, super);
    Isnt_Nullptr(this, );
    Hama_HSM_Event_T ev =
    {
          0, NULL, 0 /* FIXME terminal */
    };
-   this->hsm.vtbl->dispatch(&this->hsm, &ev);
+   this->fsm.vtbl->dispatch(&this->fsm, &ev);
 }
 
-int App_Handler_Compare(void const * a, void const * b)
+void application_startup(union Application * const this)
 {
-   IPC_Mail_Id_T const * ida = (IPC_Mail_Id_T const *)a;
-   IPC_Mail_Id_T const * idb = (IPC_Mail_Id_T const *)b;
-   return (*ida - *idb);
-}
-/*=====================================================================================* 
- * Exported Function Definitions
- *=====================================================================================*/
-void App_Ctor(App_T * const this, IPC_Process_Id_T const pid)
-{
-   this->vtbl->Worker.ctor(&this->Worker, HAMA_SCHED_WORKER, pid);
+      IPC_Run(APP_WORKER_TID);
 }
 
-void App_run_all_apps(void)
+/*==============================================================================
+ * External Functions
+ * ============================================================================*/
+void Populate_Application(union Application * const this, union Worker * (* factory_method)(IPC_TID_T const tid))
 {
-   App_T * this = NULL;
-   App_get_instance(&this);
+      if(NULL == Application.vtbl)
+      {
+            Populate_Worker(&Application.Worker, APP_WORKER_TID, &Application_Mailbox, 
+            Application_Mail_Buff, Num_Elems(Application_Mail_Buff));
+            Object_Init(&Application.Object, &Application_Class.Class,
+            sizeof(Application_Class.Worker));
+            Application.vtbl = &Application_Class;
+            Application.fsm = Application_Pool;
+            Application.fsm = Num_Elems(Application_Pool)
+      }
+      memcpy(this, &Application, sizeof(Application));
+
+      IPC_TID_T i;
+      for(i = 0; i < IPC_MAX_TID; ++i)
+      {
+            Application_Pool[i].worker = factory_method(i);
+            if(NULL != Application_Pool[i].worker)
+            {
+                  Populate_FSM(&Application_Pool[i].fsm, 
+                  Application_St_Chart, Num_Elems(Application_St_Chart),
+                  Application_St_Machine, Num_Elems(Application_St_Machine));
+            }
+      }
+}
+
+void Application_run_all_apps(void)
+{
+   Application_T * this = NULL;
+   Application_get_instance(&this);
    Isnt_Nullptr(this,);
    this->Worker.Task.vtbl->run(&this->Worker.Task);
 
 }
 
-void App_initialized(void)
+void Application_initialized(void)
 {
-   IPC_send(HAMA_SCHED_WORKER, HAMA_SCHED_PROCESS, HAMA_SCHED_TASK_INIT, NULL, 0);
-
+   IPC_send(APP_WORKER_TID,  APP_TASK_INIT_TID, NULL, 0);
 }
 
-void App_terminated(void)
+void Application_terminated(void)
 {
-   IPC_send(HAMA_SCHED_WORKER, HAMA_SCHED_PROCESS, HAMA_SCHED_TASK_TERM, NULL, 0);
-
+   IPC_send(APP_WORKER_TID,  APP_TASK_TERM_TID, NULL, 0);
 }
 
-void App_shutdown(void)
+void Application_shutdown(void)
 {
-   IPC_send(HAMA_SCHED_WORKER, HAMA_SCHED_PROCESS, WORKER_SHUTDOWN, NULL, 0);
+   IPC_send(APP_WORKER_TID,  APP_SHUTDOWN_TID, NULL, 0);
 }
-/*=====================================================================================* 
- * app.c
- *=====================================================================================*
- * Log History
- *
- *=====================================================================================*/

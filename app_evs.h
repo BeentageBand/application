@@ -7,38 +7,13 @@
  * description : Any comments
  *
  */
-/*=====================================================================================*/
 #ifndef APP_EVS_H_
 #define APP_EVS_H_
-/*=====================================================================================*
- * Project Includes
- *=====================================================================================*/
 
-/*=====================================================================================* 
- * Standard Includes
- *=====================================================================================*/
+#define APP_INT_MAILIST(X) \
+   X(APP_START_THREADS_INT_MID, "Start fsm for worker") \
+   X(APP_THREAD_INIT_INT_MID,     "MAILS TO SCHEDULER THAT TASK IS INITIATED") \
+   X(APP_THREAD_TERM_INT_MID,     "MAILS TO SCHEDULER THAT TASK IS TERMINATED") \
+   X(APP_SHUTDOWN_INT_MID,      "MAILS TO SCHEDULER TO SHUTDOWN ALL APPS") \
 
-/*=====================================================================================* 
- * Exported X-Macros
- *=====================================================================================*/
-#define HAMA_SCHED_PRIVATE_MAIL_LIST \
-   PRIVATE_MAIL(HAMA_SCHED_TASK_INIT,     "MAILS TO SCHEDULER THAT TASK IS INITIATED") \
-   PRIVATE_MAIL(HAMA_SCHED_TASK_TERM,     "MAILS TO SCHEDULER THAT TASK IS TERMINATED") \
-   PRIVATE_MAIL(HAMA_SCHED_SHUTDOWN,      "MAILS TO SCHEDULER TO SHUTDOWN ALL APPS") \
-
-#define HAMA_SCHED_SUBSCRIBABLE_MAIL_LIST \
-/*=====================================================================================* 
- * Exported Define Macros
- *=====================================================================================*/
-
-/*=====================================================================================* 
- * Exported Type Declarations
- *=====================================================================================*/
-
-/*=====================================================================================* 
- * app_evs.h
- *=====================================================================================*
- * Log History
- *
- *=====================================================================================*/
-#endif /* APP_EVS_H_ */
+#define APP_PBC_MAILIST(X) \

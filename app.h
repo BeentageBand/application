@@ -10,65 +10,43 @@
 /*=====================================================================================*/
 #ifndef APP_H_
 #define APP_H_
-/*=====================================================================================*
- * Project Includes
- *=====================================================================================*/
-#include "hama_hsm.h"
+#include "fsm.h"
 #include "worker.h"
-/*=====================================================================================* 
- * Standard Includes
- *=====================================================================================*/
-
-/*=====================================================================================* 
- * Exported X-Macros
- *=====================================================================================*/
-
-/*=====================================================================================* 
- * Exported Define Macros
- *=====================================================================================*/
-#undef CLASS_NAME
-#undef CLASS_INHERITS
-#undef CLASS_MEMBERS
-#undef CLASS_METHODS
-
-#define CLASS_NAME App
-#define CLASS_INHERITS Worker
-
-#define CLASS_MEMBERS(_member) \
-_member(Hama_HSM_T _private, hsm) \
-
-#define CLASS_METHODS(_method, _void_method) \
-void _method(ctor, IPC_Process_Id_T const) \
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-/*=====================================================================================* 
- * Exported Type Declarations
- *=====================================================================================*/
-CLASS_DECLARATION
-/*=====================================================================================* 
- * Exported Object Declarations
- *=====================================================================================*/
 
-/*=====================================================================================* 
- * Exported Function Prototypes
- *=====================================================================================*/
-extern void App_run_all_apps(void);
-extern void App_initialized(void);
-extern void App_terminated(void);
-extern void App_shutdown(void);
-/*=====================================================================================* 
- * Exported Function Like Macros
- *=====================================================================================*/
+
+typedef union Application
+{
+    union Application_Class _private * _private vtbl;
+    struct Object Object;
+    struct
+    {
+        union Worker Worker;
+        union FSM _private * _private fsm;
+        size_t _private n_fsm;
+    };
+}Application_T;
+
+typedef union Application_Class
+{
+    struct
+    {
+        union Worker;
+        int (* _private startup)(union Application * const);
+    };
+    struct Class Class;
+}Application_Class_T;
+
+extern Application_Class_T _private Application_Class;
+
+extern void Populate_Application(union Application * const app);
+extern void Application_initialized(void);
+extern void Application_terminated(void);
+extern void Application_shutdown(void);
+
 #ifdef __cplusplus
 }
 #endif
-/*=====================================================================================* 
- * app.h
- *=====================================================================================*
- * Log History
- *
- *=====================================================================================*/
-#endif /*APP_H_*/
-
