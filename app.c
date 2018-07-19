@@ -60,24 +60,20 @@ static union St_Machine_State Application_St_Machine[APP_MAX_STID];
  * ============================================================================*/
 void application_delete(struct Object * const obj)
 {
-   union Application * const this = _cast(Application, obj);
-   Isnt_Nullptr(this, );
 }
 
 void application_on_mail(union Worker * const super, union Mail * const mail)
 {
-   Application_T * const this = _dynamic_cast(Application, super);
+   union Application * const this = _cast(Application, super);
    Isnt_Nullptr(this, );
-   Mail_T const mail = {{NULL}};
-   if (IPC_retreive_mail(&mail, IPC_RETRIEVE_TOUT_MS))
+   Isnt_Nullptr(mail, );
+
+   if(mail->mid >= APP_INT_START_THREADS_MID &&
+      mail->mid <= APP_INT_SHUTDOWN_MID)
    {
-         if(mail.mid >= APP_START_THREADS_INT_MID &&
-            mail.mid <= APP_SHUTDOWN_INT_MID)
-         {
-               Isnt_Nullptr(mail.payload, );
-               IPC_TID_T tid = *(IPC_TID_T *) mail.payload;
-               Application_Pool[tid].fsm->dispatch(Application_Pool + tid, &mail);
-         }
+      IPC_TID_T tid = mail->receiver;
+      union FSM * const fsm = &Application_Pool[mail->receiver].fsm;
+      fsm->State_Machine.vtbl->dispatch(&fsm->State_Machine, mail);
    }
 }
 
@@ -91,7 +87,7 @@ void application_on_start(union Worker * const super)
          union Worker * worker = Application_Pool[i].worker;
          if(worker)
          {
-               IPC_Self_Send(APP_START_THREADS_INT_MID, &i, sizeof(i));
+               IPC_Send_Self(APP_INT_START_THREADS_MID, &i, sizeof(i));
          }
    }
 }
@@ -112,7 +108,7 @@ void application_on_loop(union Worker * const super)
 
       if(is_alive)
       {
-            IPC_Self_Send(WORKER_SHUTDOWN_INT_MID, NULL, 0);
+            IPC_Send_Self(WORKER_INT_SHUTDOWN_MID, NULL, 0);
       }
 }
 
@@ -160,17 +156,17 @@ void Populate_Application(union Application * const this, union Worker * (* fact
 void Application_initialized(void)
 {
    IPC_TID_T self = IPC_Self();
-   IPC_Send(APP_WORKER_TID,  APP_THREAD_INIT_INT_MID, &self, sizeof(self));
+   IPC_Send_Self(APP_INT_THREAD_INIT_MID, &self, sizeof(self));
 }
 
 void Application_terminated(void)
 {
    IPC_TID_T self = IPC_Self();
-   IPC_Send(APP_WORKER_TID,  APP_THREAD_TERM_INT_MID, &self, sizeof(self));
+   IPC_Send_Self(APP_INT_THREAD_TERM_MID, &self, sizeof(self));
 }
 
 void Application_shutdown(void)
 {
    IPC_TID_T self = IPC_Self();
-   IPC_Send(APP_WORKER_TID,  APP_SHUTDOWN_INT_MID, &self, sizeof(self));
+   IPC_Send(APP_WORKER_TID,  APP_INT_SHUTDOWN_MID, &self, sizeof(self));
 }
