@@ -11,8 +11,8 @@
 
 #define Dbg_FID DBG_FID_DEF(APP_FID, 0)
 #define COBJECT_IMPLEMENTATION
-#include "app.h"
-#include "app_fsm.h"
+#include "application.h"
+#include "application_fsm.h"
 #include "dbg_log.h"
 #include "ipc.h"
 

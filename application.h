@@ -8,8 +8,9 @@
  *
  */
 /*=====================================================================================*/
-#ifndef APP_H_
-#define APP_H_
+#ifndef APPLICATION_H_
+#define APPLICATION_H_
+#include "application_types.h"
 #include "fsm.h"
 #include "worker.h"
 
@@ -30,14 +31,14 @@ typedef union Application_Class
     struct
     {
         union Worker_Class Worker;
-        int (* _private startup)(union Application * const);
+        App_Stat_T (* _private startup)(union Application * const);
     };
     struct Class Class;
 }Application_Class_T;
 
 extern Application_Class_T _private Application_Class;
 
-extern void Populate_Application(union Application * const this, union Worker * (* factory_method)(IPC_TID_T const tid));
+extern void Populate_Application(union Application * const this, union Worker * (* const factory_method)(IPC_TID_T const tid));
 extern void Application_initialized(void);
 extern void Application_terminated(void);
 extern void Application_shutdown(void);
@@ -46,4 +47,4 @@ extern void Application_shutdown(void);
 }
 #endif
 
-#endif /*APP_H_*/
+#endif /*APPLICATION_H_*/
