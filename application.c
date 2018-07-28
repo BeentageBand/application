@@ -128,7 +128,7 @@ int application_startup(union Application * const this)
 /*==============================================================================
  * External Functions
  * ============================================================================*/
-void Populate_Application(union Application * const this, union Worker * (* factory_method)(IPC_TID_T const tid))
+void Populate_Application(union Application * const this, union Worker * (* const factory_method)(IPC_TID_T const tid))
 {
       if(NULL == Application.vtbl)
       {

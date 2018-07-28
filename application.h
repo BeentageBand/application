@@ -18,7 +18,6 @@
 extern "C" {
 #endif
 
-
 typedef union Application
 {
     union Application_Class _private * _private vtbl;
@@ -38,7 +37,7 @@ typedef union Application_Class
 
 extern Application_Class_T _private Application_Class;
 
-extern void Populate_Application(union Application * const this, union Worker * (* const factory_method)(IPC_TID_T const tid));
+extern void Populate_Application(union Application * const app, union Worker * (* const factory_method)(IPC_TID_T const tid));
 extern void Application_initialized(void);
 extern void Application_terminated(void);
 extern void Application_shutdown(void);
