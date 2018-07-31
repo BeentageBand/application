@@ -1,23 +1,28 @@
 #include "application_fsm.h"
 
+static bool APP_NOT_RUNNING_guard(union State_Machine * const fsm, union St_Machine_State * const state);
+static bool APP_IDLE_guard(union State_Machine * const fsm, union St_Machine_State * const state);
+static bool APP_ACTIVE_guard(union State_Machine * const fsm, union St_Machine_State * const state);
+static bool APP_TERM_guard(union State_Machine * const fsm, union St_Machine_State * const state);
+
 FSM_Declare_Chart(APP_FSM, Application_St_Chart)
 
-bool APP_NOT_RUNNING_STID_guard(union State_Machine * const fsm, union St_Machine_State * const state)
+bool APP_NOT_RUNNING_guard(union State_Machine * const fsm, union St_Machine_State * const state)
 {
     return true;
 }
 
-bool APP_IDLE_STID_guard(union State_Machine * const fsm, union St_Machine_State * const state)
+bool APP_IDLE_guard(union State_Machine * const fsm, union St_Machine_State * const state)
 {
     return true;
 }
 
-bool APP_ACTIVE_STID_guard(union State_Machine * const fsm, union St_Machine_State * const state)
+bool APP_ACTIVE_guard(union State_Machine * const fsm, union St_Machine_State * const state)
 {
     return true;
 }
 
-bool APP_TERM_STID_guard(union State_Machine * const fsm, union St_Machine_State * const state)
+bool APP_TERM_guard(union State_Machine * const fsm, union St_Machine_State * const state)
 {
     return true;
 }
