@@ -1,3 +1,4 @@
+#define COBJECT_IMPLEMENTATION
 #include "application_fsm.h"
 
 static bool APP_NOT_RUNNING_guard(union State_Machine * const fsm, union St_Machine_State * const state);
