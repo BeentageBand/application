@@ -39,8 +39,8 @@ static int application_startup(union Application * const this);
  * Local Objects 
  * ============================================================================*/
 Application_Class_T Application_Class =
-{{
-      {
+{{// anoymous
+      { // Worker
             {application_delete, NULL},
             application_on_mail,
             application_on_start, 
@@ -68,10 +68,16 @@ void application_on_mail(union Worker * const super, union Mail * const mail)
    Isnt_Nullptr(this, );
    Isnt_Nullptr(mail, );
 
+   Dbg_Info("%s: mid = %d from tid = %d", 
+            __func__,
+            mail->mid,
+            mail->receiver);
+
    if(mail->mid >= APP_INT_START_THREADS_MID &&
       mail->mid <= APP_INT_SHUTDOWN_MID)
    {
       IPC_TID_T tid = mail->receiver;
+
       union FSM * const fsm = &Application_Pool[mail->receiver].fsm;
       fsm->State_Machine.vtbl->dispatch(&fsm->State_Machine, mail);
    }
@@ -87,6 +93,9 @@ void application_on_start(union Worker * const super)
          union Worker * worker = Application_Pool[i].worker;
          if(worker)
          {
+               Dbg_Info("%s: send start to tid = %d",
+                        __func__,
+                        i);
                IPC_Send_Self(APP_INT_START_THREADS_MID, &i, sizeof(i));
          }
    }
@@ -137,13 +146,19 @@ void Populate_Application(union Application * const this, union Worker * (* cons
             Object_Init(&Application.Object, &Application_Class.Class,
             sizeof(Application_Class.Worker));
             Application.vtbl = &Application_Class;
+            Application_Class.Worker.on_start = application_on_start;
+            Application_Class.Worker.on_loop = application_on_loop;
+            Application_Class.Worker.on_stop = application_on_stop;
+            Application_Class.Worker.on_mail = application_on_mail;
       }
       memcpy(this, &Application, sizeof(Application));
 
+      Application_Pool[APP_WORKER_TID].worker = this;
       IPC_TID_T i;
       for(i = 0; i < IPC_MAX_TID; ++i)
       {
-            Application_Pool[i].worker = factory_method(i);
+            if (NULL == Application_Pool[i].worker)
+                  Application_Pool[i].worker =  factory_method(i);
             if(NULL != Application_Pool[i].worker)
             {
                   Populate_FSM(&Application_Pool[i].fsm, 
