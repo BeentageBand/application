@@ -180,13 +180,13 @@ void Application_initialized(void)
 {
     IPC_TID_T self = IPC_Self();
     Dbg_Info("%s: tid  %d", __func__, self);
-    IPC_Send_Self(APP_INT_THREAD_INIT_MID, &self, sizeof(self));
+    IPC_Send(APP_WORKER_TID, APP_INT_THREAD_INIT_MID, &self, sizeof(self));
 }
 
 void Application_terminated(void)
 {
     IPC_TID_T self = IPC_Self();
-    IPC_Send_Self(APP_INT_THREAD_TERM_MID, &self, sizeof(self));
+    IPC_Send(APP_WORKER_TID, APP_INT_THREAD_TERM_MID, &self, sizeof(self));
     Dbg_Info("%s: tid  %d", __func__, self);
 }
 

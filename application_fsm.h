@@ -1,5 +1,5 @@
-#ifndef APPLICATION_FSM_H_
-#define APPLICATION_FSM_H_
+#ifndef DATA_REGLICATION_FSM_H_
+#define DATA_REGLICATION_FSM_H_
 
 #include "application_types.h"
 #include "fsm.h"
@@ -54,4 +54,4 @@ extern void Populate_App_FSM(union App_FSM * const app_fsm, union Worker * const
 #ifdef __cplusplus
 }
 #endif
-#endif /*APPLICATION_FSM_H_*/
+#endif /*DATA_REGLICATION_FSM_H_*/
