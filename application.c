@@ -34,18 +34,25 @@ static int application_startup(union Application * const this);
  * Local Objects 
  * ============================================================================*/
 Application_Class_T Application_Class =
-{{// anoymous
+{
         { // Worker
-                {application_delete, NULL},
+                {
+                        {application_delete, NULL},
+                        NULL,
+                        NULL,
+                        NULL,
+                        NULL,
+                        NULL
+                },
                 application_on_mail,
                 application_on_start,
                 application_on_loop,
                 application_on_stop
         },
         application_startup
-}};
+};
 
-static union Application Application = {{NULL}};
+static union Application Application = {NULL};
 static union Mail Application_Mail_Buff[64] ={0};
 static union App_FSM Application_Pool[IPC_MAX_TID] = {0};
 
@@ -65,16 +72,24 @@ void application_on_mail(union Worker * const super, union Mail * const mail)
     Dbg_Info("%s: mid = %d from tid = %d",
             __func__,
             mail->mid,
-            mail->receiver);
+            mail->sender);
 
     if(mail->mid >= APP_INT_START_THREADS_MID &&
             mail->mid <= APP_INT_SHUTDOWN_MID)
     {
         Isnt_Nullptr(mail->payload, );
         IPC_TID_T tid = *(IPC_TID_T *) mail->payload;
+        Dbg_Info("%s: tid %d mid %d", __func__, tid, mail->mid);
 
         union State_Machine * const st_m= &Application_Pool[tid].State_Machine;
-        st_m->vtbl->dispatch(st_m, mail);
+        if(NULL == st_m->vtbl)
+        {
+            Dbg_Fault("%s: tid %s state machine not initialized??", __func__, tid);
+        }
+        else
+        {
+            st_m->vtbl->dispatch(st_m, mail);
+        }
     }
 }
 
@@ -136,8 +151,9 @@ int application_startup(union Application * const this)
     Isnt_Nullptr(st_m, -1);
 
     union Mail mail = {NULL};
+    i = APP_WORKER_TID;
     Populate_Mail(&mail, APP_INT_THREAD_INIT_MID,
-            APP_WORKER_TID, APP_WORKER_TID, NULL, 0);
+            APP_WORKER_TID, APP_WORKER_TID, &i, sizeof(i));
     st_m->vtbl->dispatch(st_m, &mail);
     _delete(&mail);
     while(1){}

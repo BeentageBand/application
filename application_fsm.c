@@ -21,7 +21,7 @@ static union St_Machine_State Application_St_Machine[APP_MAX_STID];
 
 union App_FSM_Class App_FSM_Class =
 {
-        {{app_fsm_delete, NULL}}
+        {app_fsm_delete, NULL}
 };
 
 void app_fsm_delete(struct Object * const obj)
