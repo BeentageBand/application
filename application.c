@@ -28,14 +28,14 @@ static void application_on_mail(union Worker * const super, union Mail * const m
 static void application_on_start(union Worker * const super);
 static void application_on_loop(union Worker * const super);
 static void application_on_stop(union Worker * const super);
-static int application_startup(union Application * const this);
+static App_Stat_T application_startup(union Application * const this);
 
 /*==============================================================================
  * Local Objects 
  * ============================================================================*/
 Application_Class_T Application_Class =
-{
-        { // Worker
+{{
+        {{ // Worker
                 {
                         {application_delete, NULL},
                         NULL,
@@ -48,9 +48,9 @@ Application_Class_T Application_Class =
                 application_on_start,
                 application_on_loop,
                 application_on_stop
-        },
+        }},
         application_startup
-};
+}};
 
 static union Application Application = {NULL};
 static union Mail Application_Mail_Buff[64] ={0};
@@ -129,7 +129,7 @@ void application_on_stop(union Worker * const super)
     Isnt_Nullptr(this, );
 }
 
-int application_startup(union Application * const this)
+App_Stat_T application_startup(union Application * const this)
 {
     IPC_TID_T i;
     union State_Machine * st_m;
